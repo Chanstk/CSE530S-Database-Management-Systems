@@ -21,6 +21,7 @@ public class Tuple {
 	public Tuple(TupleDesc t) {
 		//your code here
 		this.tupleDesc = t;
+		this.fieldList = new Field[t.numFields()];
 	}
 	
 	public TupleDesc getDesc() {

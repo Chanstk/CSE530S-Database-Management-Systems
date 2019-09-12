@@ -89,8 +89,14 @@ public class TupleDesc {
      */
     public int getSize() {
     	//your code here
-    	
-    	return 0;
+    	int size = 0;
+    	for(int i = 0; i < this.numFields(); i++) {
+    		if(this.types[i] == Type.INT)
+    			size += 4;
+    		else if(this.types[i] == Type.STRING)
+    			size += 129;
+    	}
+    	return size;
     }
 
     /**

@@ -3,6 +3,7 @@ import java.util.*;
 
 /**
  * TupleDesc describes the schema of a tuple.
+ * @author Shitao Chen
  */
 public class TupleDesc {
 
@@ -19,6 +20,8 @@ public class TupleDesc {
      */
     public TupleDesc(Type[] typeAr, String[] fieldAr) {
     	//your code here
+    	this.types = typeAr;
+    	this.fields = fieldAr;
     }
 
     /**
@@ -26,7 +29,7 @@ public class TupleDesc {
      */
     public int numFields() {
         //your code here
-    	return 0;
+    	return this.fields.length;
     }
 
     /**
@@ -37,8 +40,11 @@ public class TupleDesc {
      * @throws NoSuchElementException if i is not a valid field reference.
      */
     public String getFieldName(int i) throws NoSuchElementException {
-        //your code here
-    	return null;
+    	try {
+	        return this.fields[i];
+    	} catch(NoSuchElementException e) {
+    		throw new NoSuchElementException("not a valid field reference.");
+    	}
     }
 
     /**
@@ -49,8 +55,16 @@ public class TupleDesc {
      * @throws NoSuchElementException if no field with a matching name is found.
      */
     public int nameToId(String name) throws NoSuchElementException {
-        //your code here
-    	return 0;
+    	
+    	try {
+	        for(int i = 0; i <= this.numFields(); i++) {
+	        	if(name.equals(this.fields[i]))
+	        		return i;
+	        }
+    	} catch(Exception e) {
+    		throw new NoSuchElementException("not a valid field reference.");
+    	}
+    	return -1;
     }
 
     /**
@@ -62,7 +76,11 @@ public class TupleDesc {
      */
     public Type getType(int i) throws NoSuchElementException {
         //your code here
-    	return null;
+    	try {
+	        return this.types[i];
+    	} catch(NoSuchElementException e) {
+    		throw new NoSuchElementException("not a valid field reference.");
+    	}
     }
 
     /**
@@ -71,6 +89,7 @@ public class TupleDesc {
      */
     public int getSize() {
     	//your code here
+    	
     	return 0;
     }
 
@@ -84,14 +103,18 @@ public class TupleDesc {
      */
     public boolean equals(Object o) {
     	//your code here
-    	return false;
+    	return o.hashCode() == this.hashCode();
     }
     
 
     public int hashCode() {
         // If you want to use TupleDesc as keys for HashMap, implement this so
         // that equal objects have equals hashCode() results
-        throw new UnsupportedOperationException("unimplemented");
+    	int hashCodes = 0;
+    	for(int i = 0; i < this.numFields(); i++) {
+    		hashCodes += (-1) ^i * this.types[i].hashCode();
+    	}
+    	return hashCodes;
     }
 
     /**
@@ -102,6 +125,12 @@ public class TupleDesc {
      */
     public String toString() {
         //your code here
-    	return "";
+    	String ret = "";
+    	int i = 0;
+    	for(; i < this.numFields() - 1; i++) {
+    		ret += this.types[i].toString() + "(" + this.fields[i] + "), ";
+    	}
+    	ret += this.types[i].toString() + "(" + this.fields[i] + ")";
+    	return ret;
     }
 }

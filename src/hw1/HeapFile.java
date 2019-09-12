@@ -66,6 +66,7 @@ public class HeapFile {
 	 */
 	public void writePage(HeapPage p) {
 		//your code here
+		//close file
 	}
 	
 	/**

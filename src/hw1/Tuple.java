@@ -6,22 +6,26 @@ import java.util.HashMap;
 /**
  * This class represents a tuple that will contain a single row's worth of information
  * from a table. It also includes information about where it is stored
- * @author Sam Madden modified by Doug Shook
+ * @author Sam Madden modified by Doug Shook, implemented by Shitao Chen
  *
  */
 public class Tuple {
-	
+	private TupleDesc tupleDesc;
+	private Field[] fieldList;
+	private int pId;
+	private int id;
 	/**
 	 * Creates a new tuple with the given description
 	 * @param t the schema for this tuple
 	 */
 	public Tuple(TupleDesc t) {
 		//your code here
+		this.tupleDesc = t;
 	}
 	
 	public TupleDesc getDesc() {
 		//your code here
-		return null;
+		return this.tupleDesc;
 	}
 	
 	/**
@@ -30,11 +34,12 @@ public class Tuple {
 	 */
 	public int getPid() {
 		//your code here
-		return 0;
+		return this.pId;
 	}
 
 	public void setPid(int pid) {
 		//your code here
+		this.pId = pid;
 	}
 
 	/**
@@ -42,16 +47,17 @@ public class Tuple {
 	 * @return the slot where this tuple is stored
 	 */
 	public int getId() {
-		//your code here
-		return 0;
+		return this.id;
 	}
 
 	public void setId(int id) {
 		//your code here
+		this.id = id;
 	}
 	
 	public void setDesc(TupleDesc td) {
 		//your code here;
+		this.tupleDesc = td;
 	}
 	
 	/**
@@ -61,11 +67,12 @@ public class Tuple {
 	 */
 	public void setField(int i, Field v) {
 		//your code here
+		this.fieldList[i] = v;
 	}
 	
 	public Field getField(int i) {
 		//your code here
-		return null;
+		return this.fieldList[i];
 	}
 	
 	/**
@@ -75,7 +82,13 @@ public class Tuple {
 	 */
 	public String toString() {
 		//your code here
-		return "";
+		int i = 0;
+		String ret = "";
+		for(; i < this.tupleDesc.numFields() - 1; i++) {
+			ret += this.fieldList[i].toString() + " | ";
+		}
+		ret += this.fieldList[i].toString();
+		return ret;
 	}
 }
 	

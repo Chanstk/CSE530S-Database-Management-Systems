@@ -118,7 +118,7 @@ public class TupleDesc {
         // that equal objects have equals hashCode() results
     	int hashCodes = 0;
     	for(int i = 0; i < this.numFields(); i++) {
-    		hashCodes += (-1) ^i * this.types[i].hashCode();
+    		hashCodes += Math.pow(-1, i) * this.types[i].hashCode();
     	}
     	return hashCodes;
     }

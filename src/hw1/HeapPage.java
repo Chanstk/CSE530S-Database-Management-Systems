@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/*
+ * @author Shitao Chen
+ */
 public class HeapPage {
 
 	private int id;
@@ -45,8 +48,7 @@ public class HeapPage {
 	}
 
 	public int getId() {
-		//your code here
-		return 0;
+		return this.id;
 	}
 
 	/**
@@ -55,8 +57,7 @@ public class HeapPage {
 	 * @return number of slots on this page
 	 */
 	public int getNumSlots() {
-		//your code here
-		return 0;
+		return HeapFile.PAGE_SIZE * 8  / (1 + td.getSize() * 8);
 	}
 
 	/**
@@ -64,8 +65,7 @@ public class HeapPage {
 	 * @return size of header in bytes
 	 */
 	private int getHeaderSize() {        
-		//your code here
-		return 0;
+		return this.getNumSlots() / 8;
 	}
 
 	/**
@@ -74,8 +74,9 @@ public class HeapPage {
 	 * @return true if occupied
 	 */
 	public boolean slotOccupied(int s) {
-		//your code here
-		return false;
+		int index = s / 8;
+		int pos = s % 8;
+		return (header[index] & (1 << pos)) != 0;
 	}
 
 	/**
@@ -84,7 +85,13 @@ public class HeapPage {
 	 * @param value its occupied status
 	 */
 	public void setSlotOccupied(int s, boolean value) {
-		//your code here
+		int index = s / 8;
+		int pos = s % 8;
+		if(value == true) {
+			header[index] |= (128 >> pos);
+		}else {
+			header[index] &= (255 - 1 << (8 - pos));
+		}
 	}
 	
 	/**
@@ -94,7 +101,25 @@ public class HeapPage {
 	 * @throws Exception
 	 */
 	public void addTuple(Tuple t) throws Exception {
-		//your code here
+		try {
+			if(!td.equals(t.getDesc())){
+				throw new Exception();
+			}
+			int i = 0;
+			for(; i < this.getHeaderSize(); i++) {
+				if((this.header[i] & 255) != 255) {
+					int pos = 0;
+					while((this.header[i] | 128 >> pos) != 0)
+						pos++;
+					this.tuples[i * 8 + pos] = t;
+					this.setSlotOccupied(i * 8 + pos, true);
+				}
+			}
+			if(i == this.getHeaderSize())
+				throw new Exception();
+		} catch(Exception e) {
+			return;
+		}
 	}
 
 	/**
@@ -104,7 +129,22 @@ public class HeapPage {
 	 * @throws Exception
 	 */
 	public void deleteTuple(Tuple t) {
-		//your code here
+		try {
+			if(t.getPid() != this.getId())
+				throw new Exception();
+			
+			int i = 0;
+			for(; i < this.getNumSlots(); i++) {
+				if(this.tuples[i].equals(t)) {
+					this.tuples[i] = null;
+					this.setSlotOccupied(i, false);
+				}
+			}
+			if(i == this.getNumSlots())
+				throw new Exception();
+		} catch(Exception e) {
+			return;
+		}
 	}
 	
 	/**
@@ -150,8 +190,6 @@ public class HeapPage {
 				}
 			}
 		}
-
-
 		return t;
 	}
 

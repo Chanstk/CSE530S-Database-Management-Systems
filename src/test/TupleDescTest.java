@@ -102,5 +102,6 @@ public class TupleDescTest {
 		assertFalse(td2.equals(td3));
 		assertFalse(td3.equals(td1));
 	}
+	
 
 }

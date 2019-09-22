@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -269,7 +270,7 @@ public class HeapPage {
 	 * @return
 	 */
 	public Iterator<Tuple> iterator() {
-		//your code here
-		return null;
+		Iterator<Tuple> iterator = Arrays.stream(this.tuples).iterator();
+		return iterator;
 	}
 }

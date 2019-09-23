@@ -248,7 +248,7 @@ public class HW1Tests {
 		for(int i = 0; i < 50; i++) {
 			hf.addTuple(t);
 		}
-
+		int i = hf.getAllTuples().size();
 		assertTrue("HeapFile not reporting the correct number of tuples", hf.getAllTuples().size() == 51);
 
 		assertTrue("HeapFile unable to add page", hf.readPage(1) != null);

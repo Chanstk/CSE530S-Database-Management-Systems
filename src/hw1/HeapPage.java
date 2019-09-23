@@ -22,7 +22,6 @@ public class HeapPage {
 	private int numSlots;
 	private int tableId;
 	private int leftBit;
-
 	public HeapPage(int id, byte[] data, int tableId) throws IOException {
 		this.id = id;
 		this.tableId = tableId;
@@ -105,7 +104,7 @@ public class HeapPage {
 		if(value == true) {
 			header[index] |= (1 << pos);
 		}else {
-			header[index] &= (255 - (1 << pos));
+			header[index] &= ~(1 << pos);
 		}
 	}
 	
@@ -116,23 +115,19 @@ public class HeapPage {
 	 * @throws Exception
 	 */
 	public void addTuple(Tuple t) throws Exception {
-		try {
 			if(!td.equals(t.getDesc())){
 				throw new Exception();
 			}
 			for(int i = 0; i < this.getNumSlots(); i++) {
-				if(!this.slotOccupied(i)) {
-					t.setId(i);
-					t.setPid(this.getId());
-					this.tuples[i] = t;
-					this.setSlotOccupied(i, true);
-					return;
-				}
+				if(this.slotOccupied(i)) 
+					continue;
+				t.setId(i);
+				t.setPid(this.getId());
+				this.tuples[i] = t;
+				this.setSlotOccupied(i, true);
+				return;
 			}
 			throw new Exception();
-		} catch(Exception e) {
-			return;
-		}
 	}
 
 	/**

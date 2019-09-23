@@ -92,7 +92,7 @@ public class HeapFile {
 			int pos = p.getId() * PAGE_SIZE;
 			RandomAccessFile raf = new RandomAccessFile(file,"rw");
 			raf.seek(pos);
-			raf.read(pagedata);
+			raf.write(pagedata);
 			
 			//close file
 			raf.close();
@@ -119,6 +119,7 @@ public class HeapFile {
 			HeapPage hp = readPage(i);
 			try {
 				hp.addTuple(t);
+				this.writePage(hp);
 				return hp;
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -133,6 +134,7 @@ public class HeapFile {
 			byte[] pagedata = new byte[PAGE_SIZE];
 			HeapPage nhp = new HeapPage(getNumPages(),pagedata,getId());
 			nhp.addTuple(t);
+			this.writePage(nhp);
 			return nhp;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -154,6 +156,7 @@ public class HeapFile {
 		HeapPage hp = readPage(i);
 		hp.deleteTuple(t);	
 		this.writePage(hp);
+		
 	}
 	
 	/**

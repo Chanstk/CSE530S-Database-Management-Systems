@@ -82,7 +82,7 @@ public class Tuple {
 	 * the String columns to readable text).
 	 */
 	public String toString() {
-		//your code here
+		
 		int i = 0;
 		String ret = "";
 		for(; i < this.tupleDesc.numFields() - 1; i++) {

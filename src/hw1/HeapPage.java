@@ -40,8 +40,10 @@ public class HeapPage {
 		try{
 			// allocate and read the actual records of this page
 			tuples = new Tuple[numSlots];
-			for (int i=0; i<tuples.length; i++)
+			for (int i=0; i<tuples.length; i++) {
+				System.out.print(i);
 				tuples[i] = readNextTuple(dis,i);
+			}
 		}catch(NoSuchElementException e){
 			e.printStackTrace();
 		}
@@ -66,7 +68,7 @@ public class HeapPage {
 	 * @return size of header in bytes
 	 */
 	private int getHeaderSize() {        
-		return this.getNumSlots() / 8;
+		return (this.getNumSlots() / 8) + 1 ;
 	}
 
 	/**
@@ -114,6 +116,7 @@ public class HeapPage {
 						pos++;
 					this.tuples[i * 8 + pos] = t;
 					this.setSlotOccupied(i * 8 + pos, true);
+					break;
 				}
 			}
 			if(i == this.getHeaderSize())
@@ -139,6 +142,7 @@ public class HeapPage {
 				if(this.tuples[i].equals(t)) {
 					this.tuples[i] = null;
 					this.setSlotOccupied(i, false);
+					break;
 				}
 			}
 			if(i == this.getNumSlots())

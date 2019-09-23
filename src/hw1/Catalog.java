@@ -6,15 +6,33 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
+
 /**
  * The Catalog keeps track of all available tables in the database and their
  * associated schemas.
  * For now, this is a stub catalog that must be populated with tables by a
  * user program before it can be used -- eventually, this should be converted
  * to a catalog that reads a catalog table from disk.
+ * @author Junji Heng
  */
 
 public class Catalog {
+	
+	private class Table{
+		private String tname;
+		private HeapFile hp;
+		private String hashkey;
+		
+		public Table(String tname,HeapFile hp,String hashkey){
+			this.tname = tname;
+			this.hashkey=hashkey;
+			this.hp=hp;
+		}
+		
+	}
+
+	private ArrayList<Table> mytables; 
+	private HashMap<Integer,Table> thash;
 	
     /**
      * Constructor.
@@ -22,6 +40,8 @@ public class Catalog {
      */
     public Catalog() {
     	//your code here
+    	mytables = new ArrayList<Table>();
+    	thash = new HashMap<Integer,Table>();
     	
     }
 
@@ -35,6 +55,9 @@ public class Catalog {
      */
     public void addTable(HeapFile file, String name, String pkeyField) {
     	//your code here
+    	Table newtable = new Table(name,file,pkeyField);
+    	mytables.add(newtable);
+    	thash.put(file.getId(), newtable);
     }
 
     public void addTable(HeapFile file, String name) {
@@ -47,7 +70,14 @@ public class Catalog {
      */
     public int getTableId(String name) {
     	//your code here
-    	return 0;
+    	int size=mytables.size();
+    	for (int i=0;i<size;i++) {
+    		String temp = mytables.get(i).tname;
+    		if(temp.equalsIgnoreCase(name)) {
+    			return mytables.get(i).hp.getId();
+    		}
+    	}
+    	throw new NoSuchElementException();
     }
 
     /**
@@ -57,7 +87,15 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
     	//your code here
-    	return null;
+    	int size=mytables.size();
+    	for (int i=0;i<size;i++) {
+    		int temp = mytables.get(i).hp.getId();
+    		if(temp==tableid) {
+    			return mytables.get(i).hp.getTupleDesc();
+    		}
+    	}
+    	throw new NoSuchElementException();
+
     }
 
     /**
@@ -68,26 +106,49 @@ public class Catalog {
      */
     public HeapFile getDbFile(int tableid) throws NoSuchElementException {
     	//your code here
-    	return null;
+    	int size=mytables.size();
+    	for (int i=0;i<size;i++) {
+    		int temp = mytables.get(i).hp.getId();
+    		if(temp==tableid) {
+    			return mytables.get(i).hp;
+    		}
+    	}
+    	throw new NoSuchElementException();
     }
 
     /** Delete all tables from the catalog */
     public void clear() {
     	//your code here
+    	mytables.clear();
+    	thash.clear();
     }
 
     public String getPrimaryKey(int tableid) {
     	//your code here
+    	int size=mytables.size();
+    	for (int i=0;i<size;i++) {
+    		int temp = mytables.get(i).hp.getId();
+    		if(temp==tableid) {
+    			return mytables.get(i).hashkey;
+    		}
+    	}
     	return null;
     }
 
     public Iterator<Integer> tableIdIterator() {
-    	//your code here
-    	return null;
+    	Iterator<Integer> iterator = thash.keySet().iterator();
+		return iterator;
     }
 
     public String getTableName(int id) {
     	//your code here
+    	int size=mytables.size();
+    	for (int i=0;i<size;i++) {
+    		int temp = mytables.get(i).hp.getId();
+    		if(temp==id) {
+    			return mytables.get(i).tname;
+    		}
+    	}
     	return null;
     }
     

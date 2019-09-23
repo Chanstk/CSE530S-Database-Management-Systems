@@ -35,13 +35,11 @@ public class HeapFile {
 	public File getFile() {
 		//your code here
 		return this.file;
-//		return null;
 	}
 	
 	public TupleDesc getTupleDesc() {
 		//your code here
 		return this.td;
-		// return null;
 	}
 	
 	/**
@@ -60,7 +58,6 @@ public class HeapFile {
 			raf.seek(pos);
 			raf.read(pagedata);
 			
-//			Resource leak: 'raf' is never closed
 			raf.close();
 			return new HeapPage(id,pagedata,this.getId());
 			
@@ -80,7 +77,7 @@ public class HeapFile {
 	 */
 	public int getId() {
 		//your code here
-		return this.file.hashCode();
+		return file.hashCode();
 	}
 	
 	/**
@@ -165,8 +162,17 @@ public class HeapFile {
 	 */
 	public ArrayList<Tuple> getAllTuples() {
 		//your code here
+		ArrayList<Tuple> tuples = new ArrayList<Tuple>();
+		int num = this.getNumPages();
+		for(int i=0;i<num;i++) {
+			HeapPage temp = readPage(i);
+			Iterator<Tuple> iterator = temp.iterator();
+			while(iterator.hasNext()) {
+				tuples.add(iterator.next());
+			}
+		}
 		
-		return null;
+		return tuples;
 	}
 	
 	/**

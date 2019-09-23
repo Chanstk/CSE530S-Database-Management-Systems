@@ -153,6 +153,7 @@ public class HeapFile {
 		int i = t.getPid();
 		HeapPage hp = readPage(i);
 		hp.deleteTuple(t);	
+		this.writePage(hp);
 	}
 	
 	/**

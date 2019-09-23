@@ -91,9 +91,9 @@ public class HeapPage {
 		int index = s / 8;
 		int pos = s % 8;
 		if(value == true) {
-			header[index] |= (128 >> pos);
+			header[index] |= (1 << pos);
 		}else {
-			header[index] &= (255 - 1 << (8 - pos));
+			header[index] &= (255 - (1 << pos));
 		}
 	}
 	
@@ -112,7 +112,7 @@ public class HeapPage {
 			for(; i < this.getHeaderSize(); i++) {
 				if((this.header[i] & 255) != 255) {
 					int pos = 0;
-					while((this.header[i] & 128 >> pos) != 0)
+					while((this.header[i] & 1 << pos) != 0)
 						pos++;
 					this.tuples[i * 8 + pos] = t;
 					this.setSlotOccupied(i * 8 + pos, true);

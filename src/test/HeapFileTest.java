@@ -16,6 +16,7 @@ import org.junit.Test;
 import hw1.Catalog;
 import hw1.Database;
 import hw1.HeapFile;
+import hw1.HeapPage;
 import hw1.IntField;
 import hw1.StringField;
 import hw1.Tuple;
@@ -63,7 +64,7 @@ public class HeapFileTest {
 		s[1] = 98;
 		s[2] = 121;
 		t.setField(1, new StringField(s));
-		
+
 		try {
 			hf.addTuple(t);
 		} catch (Exception e) {

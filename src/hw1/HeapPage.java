@@ -112,7 +112,7 @@ public class HeapPage {
 			for(; i < this.getHeaderSize(); i++) {
 				if((this.header[i] & 255) != 255) {
 					int pos = 0;
-					while((this.header[i] | 128 >> pos) != 0)
+					while((this.header[i] & 128 >> pos) != 0)
 						pos++;
 					this.tuples[i * 8 + pos] = t;
 					this.setSlotOccupied(i * 8 + pos, true);
@@ -139,7 +139,7 @@ public class HeapPage {
 			
 			int i = 0;
 			for(; i < this.getNumSlots(); i++) {
-				if(this.tuples[i].equals(t)) {
+				if(this.tuples[i].toString().equals(t.toString())) {
 					this.tuples[i] = null;
 					this.setSlotOccupied(i, false);
 					break;
@@ -274,7 +274,10 @@ public class HeapPage {
 	 * @return
 	 */
 	public Iterator<Tuple> iterator() {
-		Iterator<Tuple> iterator = Arrays.stream(this.tuples).iterator();
-		return iterator;
+		ArrayList<Tuple> lis = new ArrayList<Tuple>();
+        for(int i = 0; i < this.getNumSlots(); i++)
+        	if(this.tuples[i] != null)
+        		lis.add(this.tuples[i]);
+        return lis.iterator();
 	}
 }

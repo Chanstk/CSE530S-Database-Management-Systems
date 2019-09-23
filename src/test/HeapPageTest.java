@@ -100,8 +100,6 @@ public class HeapPageTest {
 		Iterator<Tuple> it = hp.iterator();
 		assertFalse(it.hasNext());
 		
-		
-		
 	}
 
 }

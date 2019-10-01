@@ -85,7 +85,7 @@ public class RelationTest {
 	}
 	
 	@Test
-	public void testRename() {
+	public void testRename() throws Exception {
 		Relation ar = new Relation(ahf.getAllTuples(), atd);
 		
 		ArrayList<Integer> f = new ArrayList<Integer>();

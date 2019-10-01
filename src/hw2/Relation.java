@@ -36,9 +36,10 @@ public class Relation {
 	 */
 	public Relation select(int field, RelationalOperator op, Field operand) {
 		//your code here
-		ArrayList<Tuple> newTuples = (ArrayList<Tuple>) this.tuples.stream()
-		.filter(e -> e.getField(field).compare(op, operand))
-		.collect(Collectors.toList());;
+		ArrayList<Tuple> newTuples = (ArrayList<Tuple>) this.tuples
+				.stream()
+				.filter(e -> e.getField(field).compare(op, operand))
+				.collect(Collectors.toList());;
 		return new Relation(newTuples, this.td);
 	}
 	/**
@@ -86,9 +87,8 @@ public class Relation {
 			return new Relation(newTupleList, newTd);
 		for(Tuple tuple: this.tuples) {
 			Tuple e = new Tuple(newTd);
-			int n = 0;
 			for(int j = 0; j < fields.size(); j++)
-				e.setField(n++, tuple.getField(fields.get(j)));
+				e.setField(j, tuple.getField(fields.get(j)));
 			newTupleList.add(e);
 		}
 		return new Relation(newTupleList, newTd);

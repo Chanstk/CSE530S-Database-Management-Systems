@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 /*
  * @author Shitao Chen
  */
-public class HeapPage {
+public class HeapPage{
 
 	private int id;
 	private byte[] header;
@@ -21,7 +21,7 @@ public class HeapPage {
 	private TupleDesc td;
 	private int numSlots;
 	private int tableId;
-	private int leftBit;
+
 	public HeapPage(int id, byte[] data, int tableId) throws IOException {
 		this.id = id;
 		this.tableId = tableId;
@@ -29,24 +29,11 @@ public class HeapPage {
 		this.td = Database.getCatalog().getTupleDesc(this.tableId);
 		this.numSlots = getNumSlots();
 		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
-		this.leftBit = this.getNumSlots() % 8;
+		
 		// allocate and read the header slots of this page
 		header = new byte[getHeaderSize()];
 		for (int i=0; i<header.length; i++)
 			header[i] = dis.readByte();
-		if(leftBit > 0) {
-			short tmp = 0;
-			int n = 8 - leftBit;
-			while(n > 0) {
-				n--;
-				tmp = (short) ((tmp << 1) + 1); 
-			}
-			while(leftBit > 0) {
-				leftBit--;
-				tmp = (short) (tmp << 1);
-			}
-			header[header.length - 1] |= tmp;
-		}
 
 		try{
 			// allocate and read the actual records of this page
@@ -79,7 +66,9 @@ public class HeapPage {
 	 * @return size of header in bytes
 	 */
 	private int getHeaderSize() {
-		return (this.getNumSlots() / 8) + 1 ;
+		if(this.getNumSlots() % 8 == 0)
+			return this.getNumSlots() / 8;
+		return this.getNumSlots() / 8 + 1 ;
 	}
 
 	/**
@@ -271,7 +260,7 @@ public class HeapPage {
 	public Iterator<Tuple> iterator() {
 		ArrayList<Tuple> lis = new ArrayList<Tuple>();
         for(int i = 0; i < this.getNumSlots(); i++)
-        	if(this.tuples[i] != null)
+        	if(this.slotOccupied(i))
         		lis.add(this.tuples[i]);
         return lis.iterator();
 	}

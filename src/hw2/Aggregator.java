@@ -1,10 +1,9 @@
 package hw2;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 
+import hw1.Field;
 import hw1.IntField;
 import hw1.RelationalOperator;
 import hw1.StringField;
@@ -14,7 +13,7 @@ import hw1.Type;
 
 /**
  * A class to perform various aggregations, by accepting one tuple at a time
- * @author Shitao Chen & Junji Heng
+ * @author Shitao Chen
  *
  */
 public class Aggregator {
@@ -23,7 +22,7 @@ public class Aggregator {
 	private boolean groupBy;
 	private AggregateOperator o;
 	private HashMap<IntField, Integer> countMap_Int = new HashMap<>(); 
-	private HashMap<StringField, Integer> countMap_Str = new HashMap<>(); 
+	private HashMap<Field, Field> listMap = new HashMap<>(); 
 	private IntField constantTmp;
 	public Aggregator(AggregateOperator o, boolean groupBy, TupleDesc td) {
 		this.o = o;
@@ -89,15 +88,28 @@ public class Aggregator {
 	}
 	
 	private void merge_Group(Tuple t) {
+
+		Field key =t.getField(0);
 		switch(o){
 			case COUNT:
+				int times = countMap_Int.getOrDefault(t.getField(0), 0);
+				countMap_Int.put((IntField) t.getField(0), times + 1);
 				break;
 			case MAX:
+				if(listMap.getOrDefault(key, null) == null || 
+				!listMap.get(key).compare(RelationalOperator.GT, t.getField(1)))
+					listMap.put(key, t.getField(1));
 				break;
 			case MIN:
+				if(listMap.getOrDefault(key, null) == null || 
+				listMap.get(key).compare(RelationalOperator.GT, t.getField(1)))
+					listMap.put(key, t.getField(1));
 				break;
 			case AVG:
 			case SUM:
+				IntField sums = (IntField) listMap.getOrDefault(key, new IntField(0));
+				listMap.put(key, new IntField(sums.getValue() + ((IntField)t.getField(1)).getValue()));
+				countMap_Int.put((IntField) key, countMap_Int.getOrDefault(t.getField(0), 0) + 1);
 				break;
 		}
 	}
@@ -119,7 +131,20 @@ public class Aggregator {
 		return this.tuples;
 	}
 	private ArrayList<Tuple> getResults_Group(){
-		return null;
+		this.tuples.clear();
+		for(Field f : listMap.keySet()) {
+			Tuple t = new Tuple(this.td);
+			if(o == AggregateOperator.AVG) {
+				int v =  ((IntField)listMap.get(f)).getValue() / countMap_Int.get(f);
+				t.setField(0, f);
+				t.setField(1, new IntField(v));
+			}else {
+				t.setField(0, f);
+				t.setField(1, listMap.get(f));
+			}
+			this.tuples.add(t);
+		}
+		return this.tuples;
 	}
 	
 }

@@ -5,24 +5,30 @@ import java.util.ArrayList;
 import hw1.Field;
 
 public class InnerNode implements Node {
-	
+	private ArrayList<Field> keys;
+	private ArrayList<Node> children;
+	private int degree;
+	private Node parent;
 	public InnerNode(int degree) {
-		//your code here
+		this.degree = degree;
+	}
+	public InnerNode(int degree, Node parent) {
+		this.parent = parent;
 	}
 	
 	public ArrayList<Field> getKeys() {
-		//your code here
-		return null;
+		return this.keys;
 	}
 	
+	public Node getParent() {
+		return this.parent;
+	}
 	public ArrayList<Node> getChildren() {
-		//your code here
-		return null;
+		return this.children;
 	}
 
 	public int getDegree() {
-		//your code here
-		return 0;
+		return this.degree;
 	}
 	
 	public boolean isLeafNode() {

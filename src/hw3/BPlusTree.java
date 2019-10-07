@@ -4,16 +4,22 @@ package hw3;
 import hw1.Field;
 
 public class BPlusTree {
-    
+    private Node root;
+    private int pInner;
+    private int pLeaf;
     public BPlusTree(int pInner, int pLeaf) {
-    	//your code here
+    	this.pInner = pInner;
+    	this.pLeaf = pLeaf;
     }
     
     public LeafNode search(Field f) {
-    	//your code here
-    	return null;
+    	return searchInNode(f, this.root);
     }
     
+    public LeafNode searchInNode(Field f, Node n) {
+    	
+    	return null;
+    }
     public void insert(Entry e) {
     	//your code here
     }

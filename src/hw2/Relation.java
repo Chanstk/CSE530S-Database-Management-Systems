@@ -76,8 +76,17 @@ public class Relation {
 		Type[] types = new Type[fields.size()];
 		String[] field = new String[fields.size()];
 		for(int i = 0; i < fields.size(); i++) {
-			types[i] = this.td.getType(fields.get(i));
-			field[i] = this.td.getFieldName(fields.get(i));
+			
+			try {
+				if(fields.get(i)>td.numFields()-1) {
+					throw new IllegalArgumentException();
+				}
+				types[i] = this.td.getType(fields.get(i));
+				field[i] = this.td.getFieldName(fields.get(i));
+			}catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException();
+			}
+			
 		}
 		
 		TupleDesc newTd = new TupleDesc(types, field);

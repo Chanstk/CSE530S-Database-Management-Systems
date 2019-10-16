@@ -1,0 +1,6 @@
+Nice work! In the future, please remove any tests you don't want to submit
+from the YourTests file (eg. test()). You will receive full credit for your
+unit tests this time because you do have two working ones, and right join was
+not required for this assingment.
+
+100/100

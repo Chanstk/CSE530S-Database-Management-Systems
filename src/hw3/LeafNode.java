@@ -2,19 +2,23 @@ package hw3;
 
 import java.util.ArrayList;
 
+import hw1.Field;
 import hw1.RelationalOperator;
 
 public class LeafNode implements Node {
 	private int degree;
-	private InnerNode parent;
+	public InnerNode parent;
 	
 	ArrayList<Entry> entries;
 	public LeafNode(int degree) {
 		this.degree = degree;
+		this.entries = new ArrayList<Entry>();
 	}
 	
 	public LeafNode(int degree, InnerNode parent) {
+		this.degree = degree;
 		this.parent = parent;
+		this.entries = new ArrayList<Entry>();
 	}
 	
 	public ArrayList<Entry> getEntries() {
@@ -23,6 +27,9 @@ public class LeafNode implements Node {
 
 	public InnerNode getParent() {
 		return this.parent;
+	}
+	public void setParent(Node p) {
+		this.parent = (InnerNode) p;
 	}
 	public void insertEntry(Entry e) {	
 		for(int i = 0; i < this.entries.size(); i++)

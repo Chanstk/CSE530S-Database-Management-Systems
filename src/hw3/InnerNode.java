@@ -9,19 +9,24 @@ public class InnerNode implements Node {
 	private ArrayList<Field> keys;
 	private ArrayList<Node> children;
 	private int degree;
-	private InnerNode parent;
+	public InnerNode parent;
 	public InnerNode(int degree) {
+		this.keys = new ArrayList<Field>();
+		this.children = new ArrayList<Node>();
 		this.degree = degree;
 	}
 	public InnerNode(int degree, InnerNode parent) {
 		this.parent = parent;
+		this.keys = new ArrayList<Field>();
+		this.children = new ArrayList<Node>();
+		this.degree = degree;
 	}
 	
 	public ArrayList<Field> getKeys() {
 		return this.keys;
 	}
 	
-	public Node getParent() {
+	public InnerNode getParent() {
 		return this.parent;
 	}
 	public ArrayList<Node> getChildren() {
@@ -32,6 +37,9 @@ public class InnerNode implements Node {
 		return this.degree;
 	}
 	
+	public void setParent(Node p) {
+		this.parent = (InnerNode) p;
+	}
 	public boolean isLeafNode() {
 		return false;
 	}

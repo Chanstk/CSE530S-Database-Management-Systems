@@ -74,9 +74,7 @@ public class BPlusTree {
     		parentNode.getChildren().add(n1);
     		parentNode.getChildren().add(n2);
     		parentNode.getKeys().add((n1.getEntries().get(n1.getEntries().size() - 1 )).getField());
-    		if(n == root) {
-    			this.root = parentNode;
-    		}
+    		this.root = parentNode;
     		return;
     	}
     	int index = parentNode.getChildren().indexOf(n);
@@ -118,8 +116,7 @@ public class BPlusTree {
     		parentNode.getKeys().add(middle);
     		parentNode.getChildren().add(n1);
     		parentNode.getChildren().add(n2);
-    		if(n == root)
-    			this.root = parentNode;
+    		this.root = parentNode;
     		return;
     	}
     	int index = parentNode.getChildren().indexOf(n);

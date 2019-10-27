@@ -26,6 +26,51 @@ public class YourHW3Tests {
 	}
 	
 	@Test
+	public void testD() {
+		BPlusTree bt = new BPlusTree(3, 2);
+		bt.insert(new Entry(new IntField(9), 0));
+		bt.insert(new Entry(new IntField(4), 0));
+		bt.insert(new Entry(new IntField(12), 0));
+		bt.insert(new Entry(new IntField(13), 0));
+		bt.insert(new Entry(new IntField(15), 0));
+//		bt.insert(new Entry(new IntField(6), 0));
+//		bt.insert(new Entry(new IntField(1), 0));
+//		bt.insert(new Entry(new IntField(3), 0));
+//		bt.insert(new Entry(new IntField(10), 0));
+
+		bt.delete(new Entry(new IntField(18), 0));
+//		bt.delete(new Entry(new IntField(4), 0));
+//		bt.delete(new Entry(new IntField(4), 0));
+//		bt.delete(new Entry(new IntField(10), 0));
+//		bt.delete(new Entry(new IntField(2), 0));
+
+		//verify root properties
+		Node root = bt.getRoot();
+
+		assertTrue(root.isLeafNode() == false);
+		InnerNode in = (InnerNode)root;
+
+		ArrayList<Field> k = in.getKeys();
+		ArrayList<Node> c = in.getChildren();
+
+		assertTrue(k.get(0).compare(RelationalOperator.EQ, new IntField(9)));
+		
+		Node ll = c.get(0);
+		Node lr = c.get(1);
+
+		assertTrue(ll.isLeafNode());
+		assertTrue(lr.isLeafNode());
+		
+		LeafNode lll = (LeafNode)ll;
+		LeafNode lrl = (LeafNode)lr;
+
+		ArrayList<Entry> ell = lll.getEntries();
+
+		assertTrue(ell.get(0).getField().equals(new IntField(4)));
+
+	}
+	
+	@Test
 	public void testMoreDegree() {
 		BPlusTree bt = new BPlusTree(4, 3);
 		bt.insert(new Entry(new IntField(1), 9));

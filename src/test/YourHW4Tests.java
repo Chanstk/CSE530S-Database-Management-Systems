@@ -310,5 +310,54 @@ public class YourHW4Tests {
 
 
 	}
+	
+	@Test 
+	public void testHoldLocks() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
+		if(!bp.holdsLock(0, tid, 0)) {
+			fail("Should be able to hold read locks");
+		}
+	    bp.transactionComplete(0, true);
+	    if(bp.holdsLock(0, tid, 0)) {
+			fail("Shouldn't be able to hold locks after completing transactions");
+		}
+		
+	}
+	
+	@Test 
+	public void testMultiPleWriteLocks() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_WRITE);
+		try {
+		bp.getPage(1, tid, 0, Permissions.READ_WRITE);
+		} catch(Exception e) {
+			
+		}
+		if(!bp.holdsLock(0, tid, 0)) {
+			fail("T1 should hold the lock");
+		}
+		if(bp.holdsLock(1, tid, 0)) {
+			fail("T2 should not hold the lock");
+		}
+		assertTrue(true);
+		
+	}
+	
+	@Test 
+	public void testMultiPleReadLocks() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
+		try {
+		bp.getPage(1, tid, 0, Permissions.READ_ONLY);
+		} catch(Exception e) {
+			
+		}
+		if(!bp.holdsLock(0, tid, 0)) {
+			fail("T1 should hold the lock");
+		}
+		if(!bp.holdsLock(1, tid, 0)) {
+			fail("T2 should hold the lock");
+		}
+		assertTrue(true);
+		
+	}
 
 }

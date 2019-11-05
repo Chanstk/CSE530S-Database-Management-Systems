@@ -22,7 +22,7 @@ import hw1.TupleDesc;
 import hw4.BufferPool;
 import hw4.Permissions;
 
-public class YourHW4Tests {
+public class HW4Tests {
 
 	private Catalog c;
 	private BufferPool bp;
@@ -58,7 +58,73 @@ public class YourHW4Tests {
 		tid = c.getTableId("test");
 		tid2 = c.getTableId("test2");
 	}
+	@Test
+	public void testReleaseLocks() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
+	    bp.transactionComplete(0, true);
 
+	    bp.getPage(1, tid, 0, Permissions.READ_WRITE);
+	    bp.transactionComplete(1, true);
+	    assertTrue(true);
+	}
+	
+	@Test
+	public void testEvict() throws Exception {
+		for(int i = 0; i < 50; i++) {
+			bp.getPage(0, tid2, i, Permissions.READ_WRITE);
+			Tuple t = new Tuple(td);
+			t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
+			byte[] s = new byte[129];
+			s[0] = 2;
+			s[1] = 98;
+			s[2] = 121;
+			t.setPid(i);
+			bp.deleteTuple(0, tid2, t);
+		}
+		try {
+			bp.getPage(0, tid2, 50, Permissions.READ_WRITE);
+		} catch (Exception e) {
+			assertTrue(true);
+			return;
+		}
+		fail("Should have thrown an exception");
+
+	}
+	
+	@Test
+	public void testEvict2() throws Exception {
+		for(int i = 0; i < 50; i++) {
+			bp.getPage(0, tid2, i, Permissions.READ_WRITE);
+		}
+		try {
+			bp.getPage(0, tid2, 50, Permissions.READ_WRITE);
+		} catch (Exception e) {
+			fail("Should have evicted a page");
+		}
+		assertTrue(true);
+
+	}
+	
+	@Test
+	public void testReadLocks() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
+		bp.getPage(1, tid, 0, Permissions.READ_ONLY);
+		if(!bp.holdsLock(0, tid, 0) && !bp.holdsLock(1, tid, 0)) {
+			fail("Should be able to acquire multiple read locks");
+		}
+		assertTrue(true);
+	}
+	
+	@Test
+	public void testLockUpgrade() throws Exception {
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
+		bp.getPage(0, tid, 0, Permissions.READ_WRITE);
+		if(!bp.holdsLock(0, tid, 0)) {
+			fail("Should be able to upgrade locks");
+		}
+		assertTrue(true);
+	}
+	
 	@Test
 	public void testLockUpgrade2() throws Exception {
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE);
@@ -246,53 +312,55 @@ public class YourHW4Tests {
 
 	}
 	
-	@Test 
-	public void testHoldLocks() throws Exception {
-		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
-		if(!bp.holdsLock(0, tid, 0)) {
-			fail("Should be able to hold read locks");
-		}
-	    bp.transactionComplete(0, true);
-	    if(bp.holdsLock(0, tid, 0)) {
-			fail("Shouldn't be able to hold locks after completing transactions");
+	@Test
+	public void testWrongPermissions() throws Exception {
+		Tuple t = new Tuple(td);
+		t.setField(0, new IntField(new byte[] {0, 0, 0, (byte)131}));
+		byte[] s = new byte[129];
+		s[0] = 2;
+		s[1] = 98;
+		s[2] = 121;
+		t.setField(1, new StringField(s));
+		
+		bp.getPage(0, tid, 0, Permissions.READ_ONLY); //acquire lock for the page
+		try {
+			bp.insertTuple(0, tid, t); //insert the tuple into the page
+			assertTrue(false);
+		}catch(Exception e){
+			//should not allow the user to write to a lock with read only permissions
+			assertTrue(true);
 		}
 		
 	}
 	
-	@Test 
-	public void testMultiPleWriteLocks() throws Exception {
+	/**
+	 * This test creates deadlock, then checks to see three things, increasing in order of strictness:
+	 * 		1. That at least one lock has survived deadlock
+	 * 		2. That whichever transaction survived deadlock still has both of its locks
+	 * 				(This is to ensure that locks are rolled back by transaction, not individually)
+	 * 		3. That the deadlock is truly resolved, and there are no conflicting locks left
+	 * 
+	 * @throws Exception
+	 */
+	public void testDeadlockResolveAndSurvive() throws Exception {
 		bp.getPage(0, tid, 0, Permissions.READ_WRITE);
-		try {
+		bp.getPage(1, tid2, 0, Permissions.READ_WRITE);
+		bp.getPage(0, tid2, 0, Permissions.READ_WRITE);
 		bp.getPage(1, tid, 0, Permissions.READ_WRITE);
-		} catch(Exception e) {
-			
-		}
-		if(!bp.holdsLock(0, tid, 0)) {
-			fail("T1 should hold the lock");
-		}
-		if(bp.holdsLock(1, tid, 0)) {
-			fail("T2 should not hold the lock");
-		}
-		assertTrue(true);
-		
-	}
-	
-	@Test 
-	public void testMultiPleReadLocks() throws Exception {
-		bp.getPage(0, tid, 0, Permissions.READ_ONLY);
-		try {
-		bp.getPage(1, tid, 0, Permissions.READ_ONLY);
-		} catch(Exception e) {
-			
-		}
-		if(!bp.holdsLock(0, tid, 0)) {
-			fail("T1 should hold the lock");
-		}
-		if(!bp.holdsLock(1, tid, 0)) {
-			fail("T2 should hold the lock");
-		}
-		assertTrue(true);
-		
+
+		boolean holdsLock = bp.holdsLock(0, tid, 0) || bp.holdsLock(1, tid2, 0) || bp.holdsLock(0, tid2, 0)
+				|| bp.holdsLock(1, tid, 0);
+		assertTrue("All locks have been released, but some locks must survive the deadlock", holdsLock);
+
+		boolean t0HasLocks = bp.holdsLock(0, tid, 0) && bp.holdsLock(0, tid2, 0);
+		boolean t1HasLocks = bp.holdsLock(1, tid, 0) && bp.holdsLock(1, tid2, 0);
+		assertTrue("Either transaction 0 or transaction 1 must still hold a lock on all of the requested pages",
+				t0HasLocks || t1HasLocks);
+
+		boolean overlappingLocksTable0 = bp.holdsLock(0, tid, 0) && bp.holdsLock(1, tid, 0);
+		boolean overlappingLocksTable1 = bp.holdsLock(0, tid2, 0) && bp.holdsLock(1, tid2, 0);
+		assertTrue("There are conflicting write-locks on one of the requested pages",
+				!overlappingLocksTable0 && !overlappingLocksTable1);
 	}
 
 }

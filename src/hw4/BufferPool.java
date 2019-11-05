@@ -1,10 +1,19 @@
 package hw4;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import hw1.Database;
+import hw1.HeapFile;
 import hw1.HeapPage;
 import hw1.Tuple;
-
+import hw4.Permissions;
 /**
  * BufferPool manages the reading and writing of pages into memory from
  * disk. Access methods call into it to retrieve pages, and it fetches
@@ -15,6 +24,37 @@ import hw1.Tuple;
  * locks to read/write the page.
  */
 public class BufferPool {
+	class Lock {
+		int pageId;
+		int transId;
+		int tableId;
+		Permissions permisson;
+		public Lock(int pageId, int transId, int tableId, Permissions p) {
+			this.pageId = pageId;
+			this.transId = transId;
+			this.tableId = tableId;
+			this.permisson = p;
+		}
+	}
+	
+	class Pair {
+	    final int a;
+	    final int b;
+	    public Pair(int a, int b) {
+	    	this.a = a;
+	    	this.b = b;
+	    }
+	    
+	    @Override
+	    public boolean equals(Object obj) {
+	    	return ((Pair)obj).a == this.a && ((Pair)obj).b == this.b;
+	    }
+	    @Override
+	    public int hashCode() {
+	    	
+	    	return a* 11 + b; 
+	    }
+	}
     /** Bytes per page, including header. */
     public static final int PAGE_SIZE = 4096;
 
@@ -22,14 +62,24 @@ public class BufferPool {
     other classes. BufferPool should use the numPages argument to the
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
-
+    private Map<HeapPage, Boolean> dirtyIndicator;//indicate whether a heappage is dirty
+    private Map<Pair, HeapPage> cache;
+    private Map<Integer, List<Lock>> transLock;
+    private Map<Pair, List<Lock>> pageReadLocks;
+    private Map<Pair, List<Lock>> pageWriteLocks;
+    private int maxPage;
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
-        // your code here
+        this.dirtyIndicator = new HashMap<>();
+        this.cache = new HashMap<>();
+        this.transLock = new HashMap<>();
+        this.pageReadLocks = new HashMap<>();
+        this.pageWriteLocks = new HashMap<>();
+        this.maxPage = numPages;
     }
 
     /**
@@ -50,10 +100,67 @@ public class BufferPool {
      */
     public HeapPage getPage(int tid, int tableId, int pid, Permissions perm)
         throws Exception {
-        // your code here
-        return null;
+        HeapPage hp = Database.getCatalog().getDbFile(tableId).readPage(pid);
+        Pair tpid = new Pair(tableId, pid);
+        pageWriteLocks.putIfAbsent(tpid, new ArrayList<>());
+        pageReadLocks.putIfAbsent(tpid, new ArrayList<>());
+        transLock.putIfAbsent(tid, new ArrayList<>());
+//        //already have write lock
+//        if(!pageWriteLocks.get(tpid).isEmpty()) {
+//        	transactionComplete(tid, false);
+//        	return hp;
+//        }
+//        //want to add write lock but other have locks
+//        if(perm.toString().equals("READ_WRITE"){
+//        	
+//        	transactionComplete(tid, false);
+//        	return hp;
+//        }
+        if(perm.toString().equals("READ_WRITE")){
+        	for(Lock lock : pageReadLocks.get(tpid)) 
+        		if(tid != lock.transId && lock.pageId == pid && lock.tableId == tableId) {
+        			transactionComplete(tid, false);
+        			return hp;
+        		}
+        	for(Lock lock : pageWriteLocks.get(tpid)) 
+        		if(tid != lock.transId && lock.pageId == pid && lock.tableId == tableId) {
+        			transactionComplete(tid, false);
+        			return hp;
+        		}
+        }else {
+        	for(Lock lock : pageWriteLocks.get(tpid)) 
+        		if(tid != lock.transId && lock.pageId == pid && lock.tableId == tableId) {
+        			transactionComplete(tid, false);
+        			return hp;
+        		}
+        }
+        //acquire lock
+        Lock lock = new Lock(pid, tid, tableId, perm);
+        transLock.putIfAbsent(tid, new ArrayList<>());
+        upgradeOrAddLoack(transLock.get(tid), lock);
+        if(perm.toString().equals("READ_ONLY")) 
+        	upgradeOrAddLoack(pageReadLocks.get(tpid), lock);
+        else 
+        	upgradeOrAddLoack(pageWriteLocks.get(tpid), lock);
+        
+        if(cache.containsKey(tpid))
+        	return hp;
+        if(cache.size() > this.maxPage)
+        	this.evictPage();
+        cache.put(tpid, hp);
+        this.maxPage++;
+        return hp;
     }
-
+    
+    private void upgradeOrAddLoack(List<Lock> src, Lock target){
+    	for(int i = 0; i < src.size(); i++)
+    		if(src.get(i).pageId == target.pageId && src.get(i).tableId == target.tableId) {
+    			src.set(i, target);
+    			return;
+    		}
+    	src.add(target);
+    }
+    
     /**
      * Releases the lock on a page.
      * Calling this is very risky, and may result in wrong behavior. Think hard
@@ -65,13 +172,28 @@ public class BufferPool {
      * @param pid the ID of the page to unlock
      */
     public  void releasePage(int tid, int tableId, int pid) {
-        // your code here
+    	Pair tpid = new Pair(tableId, pid);
+    	List<Lock> locks = transLock.get(tid);
+    	List<Lock> filtredLocks = locks
+    			.stream()
+    			.filter(e -> e.pageId != pid && e.tableId != tableId)
+    			.collect(Collectors.toList());
+    	transLock.put(tid, filtredLocks);
+    	pageReadLocks.putIfAbsent(tpid, new ArrayList<>());
+    	pageWriteLocks.putIfAbsent(tpid, new ArrayList<>());
+    	pageReadLocks.get(tpid).clear();
+    	pageWriteLocks.get(tpid).clear();
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
-    public   boolean holdsLock(int tid, int tableId, int pid) {
-        // your code here
-        return false;
+    public boolean holdsLock(int tid, int tableId, int pid) {
+    	List<Lock> locks = transLock.getOrDefault(tid, new ArrayList<>());
+    	if(locks.size() == 0)
+    		return false;
+    	for(Lock lock : locks)
+    		if(lock.pageId == pid && lock.tableId == tableId)
+    			return true;
+    	return false;
     }
 
     /**
@@ -81,9 +203,14 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param commit a flag indicating whether we should commit or abort
      */
-    public   void transactionComplete(int tid, boolean commit)
+    public void transactionComplete(int tid, boolean commit)
         throws IOException {
-        // your code here
+        for(Lock lock: transLock.get(tid)) {
+        	releasePage(tid, lock.tableId, lock.pageId);
+        	//if(commit)
+        		//flushPage(lock.tableId, lock.pageId);
+        }
+        transLock.get(tid).clear();
     }
 
     /**
@@ -119,7 +246,8 @@ public class BufferPool {
     }
 
     private synchronized  void flushPage(int tableId, int pid) throws IOException {
-        // your code here
+    	HeapFile hf = Database.getCatalog().getDbFile(tableId);
+    	hf.writePage(cache.get(new Pair(tableId, pid)));
     }
 
     /**

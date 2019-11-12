@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 import hw1.Database;
 import hw1.HeapFile;
 import hw1.HeapPage;
+import hw1.IntField;
 import hw1.Tuple;
 import hw4.Permissions;
 /**
@@ -139,16 +141,19 @@ public class BufferPool {
         transLock.putIfAbsent(tid, new ArrayList<>());
         upgradeOrAddLoack(transLock.get(tid), lock);
         if(perm.toString().equals("READ_ONLY")) 
-        	upgradeOrAddLoack(pageReadLocks.get(tpid), lock);
+        	{
+        		upgradeOrAddLoack(pageReadLocks.get(tpid), lock);
+        		pageWriteLocks.remove(tpid);
+        	}
         else 
         	upgradeOrAddLoack(pageWriteLocks.get(tpid), lock);
         
         if(cache.containsKey(tpid))
         	return hp;
-        if(cache.size() > this.maxPage)
+        if(cache.size() >= this.maxPage)
         	this.evictPage();
         cache.put(tpid, hp);
-        this.maxPage++;
+        //this.maxPage++;
         return hp;
     }
     
@@ -207,8 +212,8 @@ public class BufferPool {
         throws IOException {
         for(Lock lock: transLock.get(tid)) {
         	releasePage(tid, lock.tableId, lock.pageId);
-        	//if(commit)
-        		//flushPage(lock.tableId, lock.pageId);
+        	if(!commit)
+        		flushPage(lock.tableId, lock.pageId);
         }
         transLock.get(tid).clear();
     }
@@ -227,6 +232,18 @@ public class BufferPool {
     public  void insertTuple(int tid, int tableId, Tuple t)
         throws Exception {
         // your code here
+    	int pid = t.getPid();
+    	HeapFile hf = Database.getCatalog().getDbFile(tableId);
+    	Pair tpid = new Pair(tableId, pid);
+    	HeapPage hp = hf.readPage(pid);
+    	if(this.pageWriteLocks.containsKey(tpid)==false) {
+    		throw new Exception();
+    	}
+    	hf.addTuple(t);
+    	dirtyIndicator.putIfAbsent(hp, true);
+    	
+    	
+    	
     }
 
     /**
@@ -242,7 +259,16 @@ public class BufferPool {
      */
     public  void deleteTuple(int tid, int tableId, Tuple t)
         throws Exception {
-        // your code here
+    	int pid = t.getPid();
+    	HeapFile hf = Database.getCatalog().getDbFile(tableId);
+    	
+    	HeapPage hp = hf.readPage(pid);
+    	hf.deleteTuple(t);
+    	dirtyIndicator.putIfAbsent(hp, true);
+
+    	
+
+    	
     }
 
     private synchronized  void flushPage(int tableId, int pid) throws IOException {
@@ -255,7 +281,23 @@ public class BufferPool {
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
     private synchronized  void evictPage() throws Exception {
-        // your code here
+    	Iterator<Pair> iter = this.cache.keySet().iterator();
+    	Pair pair = iter.next();
+    	HeapPage hp= Database.getCatalog().getDbFile(pair.a).readPage(pair.b);
+    	while(iter.hasNext()&& dirtyIndicator.containsKey(hp)) {
+    		pair = iter.next();
+    		hp= Database.getCatalog().getDbFile(pair.a).readPage(pair.b);
+    	}
+    	// There are dirty pages can't flush
+    	if(!iter.hasNext() || dirtyIndicator.isEmpty() == false) {
+    		throw new Exception();
+    	}
+    	flushPage(pair.a,pair.b);
+    	dirtyIndicator.remove(hp);
+    	this.cache.remove(pair);
+
+
+    	
     }
 
 }

@@ -105,17 +105,6 @@ public class BufferPool {
         pageWriteLocks.putIfAbsent(tpid, new ArrayList<>());
         pageReadLocks.putIfAbsent(tpid, new ArrayList<>());
         transLock.putIfAbsent(tid, new ArrayList<>());
-//        //already have write lock
-//        if(!pageWriteLocks.get(tpid).isEmpty()) {
-//        	transactionComplete(tid, false);
-//        	return hp;
-//        }
-//        //want to add write lock but other have locks
-//        if(perm.toString().equals("READ_WRITE"){
-//        	
-//        	transactionComplete(tid, false);
-//        	return hp;
-//        }
         if(perm.toString().equals("READ_WRITE")){
         	for(Lock lock : pageReadLocks.get(tpid)) 
         		if(tid != lock.transId && lock.pageId == pid && lock.tableId == tableId) {
@@ -207,8 +196,8 @@ public class BufferPool {
         throws IOException {
         for(Lock lock: transLock.get(tid)) {
         	releasePage(tid, lock.tableId, lock.pageId);
-        	//if(commit)
-        		//flushPage(lock.tableId, lock.pageId);
+        	if(commit)
+        		flushPage(lock.tableId, lock.pageId);
         }
         transLock.get(tid).clear();
     }
